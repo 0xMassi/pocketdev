@@ -115,6 +115,25 @@ The box runs **key-only** SSH and trusts only keys it already knows, which at fi
 
 > Notes: the MagicDNS name only resolves while Tailscale is connected (use the `100.x` IP if a connect fails to resolve). Running any other full-tunnel VPN evicts Tailscale (iOS allows one VPN) and the box goes unreachable. Prefer the per-device key model; don't sync a box private key into a third-party cloud vault.
 
+## Publish to the web
+
+Tailscale lets *you* reach the box. To let *anyone* reach something you built on it (a dev server, a demo, a live site), use `pocketdev publish` on the box. It opens an outbound Cloudflare tunnel, so a public `https://` URL works while the firewall stays empty and no inbound port ever opens.
+
+```
+# on the box, in a tmux window
+pocketdev publish 3000
+```
+
+This installs `cloudflared` on first use (a static binary in `~/.local/bin`, no root) and prints a `https://<random>.trycloudflare.com` URL pointing at `localhost:3000`. Zero account, zero domain, instant. The URL is ephemeral and meant for demos and sharing in progress.
+
+For a persistent URL on your own domain, create a tunnel in the Cloudflare Zero Trust dashboard (public hostname → `http://localhost:3000`), copy its token, and run:
+
+```
+pocketdev publish --token <token>
+```
+
+Run either in its own tmux window so your app keeps serving while you work. Stop it with Ctrl-C.
+
 ## Teardown
 
 ```

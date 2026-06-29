@@ -255,6 +255,36 @@ cmd_clone(){
 # logins, so a project is present even if you skip a login.
 cmd_setup(){ cmd_install; cmd_github; cmd_clone; cmd_login; echo; echo "Ready. Start coding: tmux new -As code"; }
 cmd_status(){ echo "tailnet:"; tailscale status 2>/dev/null || true; echo "agents: ${AGENTS[*]}"; }
+# cloudflared rides an OUTBOUND tunnel to Cloudflare, so it publishes a public URL
+# with the deny-all firewall still shut. The static binary installs into the
+# no-sudo dev user's ~/.local/bin, so publishing never needs root.
+ensure_cloudflared(){
+  command -v cloudflared >/dev/null 2>&1 && return 0
+  PATH="$HOME/.local/bin:$PATH"
+  command -v cloudflared >/dev/null 2>&1 && return 0
+  echo "== Installing cloudflared (first publish) =="
+  case "$(dpkg --print-architecture 2>/dev/null || uname -m)" in
+    arm64|aarch64) a=arm64;;
+    amd64|x86_64)  a=amd64;;
+    *) echo "pocketdev: unsupported architecture for cloudflared" >&2; return 1;;
+  esac
+  url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$a"
+  bin="$HOME/.local/bin/cloudflared"; mkdir -p "$HOME/.local/bin"
+  if curl -fsSL "$url" -o "$bin" 2>/dev/null || wget -qO "$bin" "$url"; then chmod +x "$bin"; else
+    echo "pocketdev: could not download cloudflared" >&2; return 1; fi
+}
+cmd_publish(){
+  ensure_cloudflared || return 1
+  if [ "$1" = "--token" ] && [ -n "$2" ]; then
+    echo "== Publishing via your named Cloudflare tunnel (Ctrl-C to stop) =="
+    exec cloudflared tunnel run --token "$2"
+  fi
+  port="${1:-3000}"
+  printf '\n== Publishing http://localhost:%s to the public web ==\n' "$port"
+  echo "   cloudflared prints your https://… URL below. Ctrl-C stops it."
+  echo "   Tip: run this in its own tmux window so your app keeps serving."
+  exec cloudflared tunnel --url "http://localhost:$port" --no-autoupdate
+}
 
 case "${1:-setup}" in
   setup)   cmd_setup;;
@@ -263,8 +293,9 @@ case "${1:-setup}" in
   github)  cmd_github;;
   clone)   cmd_clone;;
   status)  cmd_status;;
+  publish) shift; cmd_publish "$@";;
   code)    exec tmux new -As code;;
-  *) echo "usage: pocketdev {setup|login|install|github|clone|status|code}";;
+  *) echo "usage: pocketdev {setup|login|install|github|clone|status|publish [port]|code}";;
 esac
 `)
 	return b.String()

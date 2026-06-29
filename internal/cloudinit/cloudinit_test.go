@@ -57,6 +57,13 @@ func TestRenderValidYAML(t *testing.T) {
 			t.Errorf("on-box helper missing login_%s", a.Key)
 		}
 	}
+	// `pocketdev publish` must dispatch to cloudflared and download the static
+	// binary (no root, since dev has no sudo) into ~/.local/bin.
+	for _, want := range []string{"publish) shift; cmd_publish", "cloudflared tunnel --url", "$HOME/.local/bin/cloudflared"} {
+		if !strings.Contains(helperSh, want) {
+			t.Errorf("on-box helper missing publish wiring: %q", want)
+		}
+	}
 }
 
 // decodeWriteFile finds a base64 write_files entry by path and returns its decoded content.
