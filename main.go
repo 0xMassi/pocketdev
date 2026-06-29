@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"runtime/debug"
 	"strings"
 
 	"github.com/0xMassi/pocketdev/internal/config"
@@ -22,7 +23,43 @@ import (
 	"github.com/charmbracelet/huh/spinner"
 )
 
-var version = "0.1.0"
+// version is stamped by the release build (-ldflags "-X main.version=vX.Y.Z").
+// When empty (go install / go build from source) it's resolved from the module's
+// build info, so `pocketdev version` reports the real installed version, not a
+// hardcoded guess.
+var version = ""
+
+func resolveVersion() string {
+	if version != "" {
+		return version
+	}
+	bi, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "dev"
+	}
+	if v := bi.Main.Version; v != "" && v != "(devel)" {
+		return v // a real tag (vX.Y.Z) or a pseudo-version from `go install`
+	}
+	// Built from a source checkout: fall back to the VCS revision.
+	var rev, dirty string
+	for _, s := range bi.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			rev = s.Value
+		case "vcs.modified":
+			if s.Value == "true" {
+				dirty = "-dirty"
+			}
+		}
+	}
+	if rev != "" {
+		if len(rev) > 12 {
+			rev = rev[:12]
+		}
+		return "dev-" + rev + dirty
+	}
+	return "dev"
+}
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
@@ -46,7 +83,7 @@ func main() {
 		}
 		tui.ShowMobile(ctx, cfg)
 	case "version", "-v", "--version":
-		fmt.Println("pocketdev", version)
+		fmt.Println("pocketdev", resolveVersion())
 	default:
 		usage()
 	}

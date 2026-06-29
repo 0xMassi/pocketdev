@@ -44,6 +44,8 @@ After that: `ssh dev@devbox`, start tmux, run your agent.
 go install github.com/0xMassi/pocketdev@latest
 ```
 
+Or grab a prebuilt binary for macOS or Linux (amd64/arm64) from the [Releases page](https://github.com/0xMassi/pocketdev/releases).
+
 Or build from source:
 
 ```
@@ -51,7 +53,7 @@ git clone https://github.com/0xMassi/pocketdev
 cd pocketdev && go build -o pocketdev .
 ```
 
-You need `go` 1.25+ to build, and `ssh-keygen` on your laptop (`pocketdev` generates an SSH key for you if you lack one).
+You need `go` 1.25+ to build, and `ssh-keygen` on your laptop (`pocketdev` generates an SSH key for you if you lack one). `pocketdev version` prints the build you're running.
 
 ## What you need first
 

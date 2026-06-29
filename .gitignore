@@ -1,6 +1,7 @@
 # build output
 /pocketdev
 *.test
+/dist/
 
 # local secrets (config lives in ~/.config/pocketdev, but never commit these)
 .env
