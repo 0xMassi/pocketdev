@@ -1,0 +1,7 @@
+# build output
+/pocketdev
+*.test
+
+# local secrets (config lives in ~/.config/pocketdev, but never commit these)
+.env
+config.json

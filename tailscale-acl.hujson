@@ -1,0 +1,35 @@
+// Tailscale ACL (HuJSON) — paste in admin console > Access Controls.
+// MVP single-user. We do NOT use Tailscale SSH (no "ssh" block): access is plain
+// hardened OpenSSH over the tailnet, gated by these port-scoped acls.
+{
+  "tagOwners": {
+    "tag:owner":  ["autogroup:admin"],   // your laptop/phone, if you choose to tag them
+    "tag:devbox": ["autogroup:admin"]     // every personal dev box carries this tag
+  },
+
+  "acls": [
+    // Only YOUR identity (laptop AND phone) reaches the box, and only on the ports
+    // we actually use — SSH (TCP 22) and Mosh (UDP 60000-61000). NOT the full range,
+    // so a single ACL slip doesn't expose every port on the box.
+    { "action": "accept", "src": ["you@example.com"], "dst": ["tag:devbox:22"] },
+    { "action": "accept", "src": ["you@example.com"], "proto": "udp", "dst": ["tag:devbox:60000-61000"] }
+    // tag:devbox NEVER appears as a src => a compromised box cannot pivot to other nodes.
+  ]
+
+  // ── TEAM / SAAS (paid Tailscale tier; free Personal = max 6 users, non-commercial) ──
+  // Per-tenant tags give box isolation, but ALL boxes share ONE tailnet and the
+  // operator (autogroup:admin) can reach every box — this is a SOFT boundary, not
+  // hard isolation. For real multi-tenancy use a SEPARATE TAILNET per tenant (or
+  // self-hosted headscale). deploy.sh mints + advertises tag:devbox-$USER per box.
+  //
+  // "tagOwners": {
+  //   "tag:devbox-alice": ["autogroup:admin"],
+  //   "tag:devbox-bob":   ["autogroup:admin"]
+  // },
+  // "acls": [
+  //   { "action":"accept", "src":["alice@corp.com"], "dst":["tag:devbox-alice:22"] },
+  //   { "action":"accept", "src":["alice@corp.com"], "proto":"udp", "dst":["tag:devbox-alice:60000-61000"] },
+  //   { "action":"accept", "src":["bob@corp.com"],   "dst":["tag:devbox-bob:22"] },
+  //   { "action":"accept", "src":["bob@corp.com"],   "proto":"udp", "dst":["tag:devbox-bob:60000-61000"] }
+  // ]
+}
