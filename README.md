@@ -2,7 +2,7 @@
 
 Run the AI coding CLI you already pay for on a cloud box you reach from your phone.
 
-`pocketdev` provisions an always-on Hetzner server, locks it to your private Tailscale network (no public SSH), and installs the agent you use: Claude Code, Codex, Cursor, opencode, Gemini, Grok, or Aider. You log in with your own subscription. Then you SSH in from a laptop or from Termius on a phone and code from anywhere.
+`pocketdev` provisions an always-on [Hetzner](https://www.hetzner.com/cloud) server, locks it to your private [Tailscale](https://tailscale.com/) network (no public SSH), and installs the agent you use: Claude Code, Codex, Cursor, opencode, Gemini, Grok, or Aider. You log in with your own subscription. Then you SSH in from a laptop or from [Termius](https://termius.com/) on a phone and code from anywhere.
 
 Two commands and you are done:
 
@@ -53,12 +53,12 @@ git clone https://github.com/0xMassi/pocketdev
 cd pocketdev && go build -o pocketdev .
 ```
 
-You need `go` 1.25+ to build, and `ssh-keygen` on your laptop (`pocketdev` generates an SSH key for you if you lack one). `pocketdev version` prints the build you're running.
+You need [Go](https://go.dev/dl/) 1.25+ to build, and `ssh-keygen` on your laptop (`pocketdev` generates an SSH key for you if you lack one). `pocketdev version` prints the build you're running.
 
 ## What you need first
 
-- A Hetzner Cloud account and a project API token with Read & Write permission. The TUI opens the console and tells you where to click.
-- A Tailscale account and one **reusable auth key** (Settings → Keys → Generate auth key → toggle Reusable). That's the only web step: no ACL edits, no OAuth client, no MagicDNS toggle. pocketdev opens the keys page for you, and finds the box on your tailnet using your local `tailscale` CLI. *(Advanced/zero-touch: set `TS_OAUTH_CLIENT_ID` + `TS_OAUTH_CLIENT_SECRET` for a tagged, auto-revoking node; `tailscale-acl.hujson` is the policy snippet for that path.)*
+- A [Hetzner Cloud](https://www.hetzner.com/cloud) account and a project API token with Read & Write permission (make it in the [Cloud Console](https://console.hetzner.cloud/) → your project → Security → API Tokens). The TUI opens the console and tells you where to click.
+- A [Tailscale](https://tailscale.com/) account and one **reusable auth key** (make it on the [Keys page](https://login.tailscale.com/admin/settings/keys) → Generate auth key → toggle Reusable). That's the only web step: no ACL edits, no OAuth client, no MagicDNS toggle. pocketdev opens the keys page for you, and finds the box on your tailnet using your local `tailscale` CLI. *(Advanced/zero-touch: set `TS_OAUTH_CLIENT_ID` + `TS_OAUTH_CLIENT_SECRET` for a tagged, auto-revoking node; `tailscale-acl.hujson` is the policy snippet for that path.)*
 
 You only do this once. `pocketdev` saves your config to `~/.config/pocketdev/config.json` (0600), so the next box skips the credential prompts.
 
@@ -66,13 +66,13 @@ You only do this once. `pocketdev` saves your config to `~/.config/pocketdev/con
 
 | Agent | CLI | Auth |
 |-------|-----|------|
-| Claude Code | `claude` | Claude Pro/Max (paste-code login over SSH) |
-| OpenAI Codex | `codex` | ChatGPT Plus/Pro/Business (`codex login --device-auth`) |
-| opencode | `opencode` | Claude Pro/Max, GitHub Copilot, ChatGPT |
-| Cursor | `cursor-agent` | Cursor Pro/Business |
-| Google Gemini | `gemini` | Google account, or `GEMINI_API_KEY` |
-| Grok Build | `grok` | SuperGrok / X Premium+, or `GROK_CODE_XAI_API_KEY` |
-| Aider | `aider` | API key only (no subscription login) |
+| [Claude Code](https://www.anthropic.com/claude-code) | `claude` | Claude Pro/Max (paste-code login over SSH) |
+| [OpenAI Codex](https://github.com/openai/codex) | `codex` | ChatGPT Plus/Pro/Business (`codex login --device-auth`) |
+| [opencode](https://opencode.ai) | `opencode` | Claude Pro/Max, GitHub Copilot, ChatGPT |
+| [Cursor](https://cursor.com) | `cursor-agent` | Cursor Pro/Business |
+| [Google Gemini](https://github.com/google-gemini/gemini-cli) | `gemini` | Google account, or `GEMINI_API_KEY` |
+| [Grok](https://x.ai) | `grok` | SuperGrok / X Premium+, or `GROK_CODE_XAI_API_KEY` |
+| [Aider](https://aider.chat) | `aider` | API key only (no subscription login) |
 
 Pick one or several. `pocketdev setup` installs each and runs its login.
 
@@ -99,17 +99,17 @@ The goal: open your SSH client, tap the box, FaceID, you're attached to the live
 
 The box runs **key-only** SSH and trusts only keys it already knows, which at first is your laptop's alone. A QR can't carry a private key: it holds the *address* (`ssh://dev@<host>`) and nothing secret, and Termius free has no cloud key sync. Scan the QR with no key on the phone and you get "connection refused." So put a trusted key on the phone once. Easiest first:
 
-- **Termius SSH ID (recommended, no key files).** Sign in to Termius and enable **SSH ID**: each device generates its own key (on a passkey-capable device, a non-exportable, FaceID-bound `sk-` key) and publishes only the **public** halves at `sshid.io/<your-handle>`. Run `pocketdev mobile`, choose *Termius SSH ID*, and enter your handle; pocketdev fetches every device's public key over `https`, validates each, and appends them to the box's `authorized_keys` in one shot. No key file leaves a device, your hardened key-only SSH and Mosh stay untouched, and one handle covers all your devices. `pocketdev mobile --sshid <handle>` skips the prompt.
+- **Termius SSH ID (recommended, no key files).** Sign in to Termius and enable [**SSH ID**](https://termius.com/ssh-id): each device generates its own key (on a passkey-capable device, a non-exportable, FaceID-bound `sk-` key) and publishes only the **public** halves at `sshid.io/<your-handle>`. Run `pocketdev mobile`, choose *Termius SSH ID*, and enter your handle; pocketdev fetches every device's public key over `https`, validates each, and appends them to the box's `authorized_keys` in one shot. No key file leaves a device, your hardened key-only SSH and Mosh stay untouched, and one handle covers all your devices. `pocketdev mobile --sshid <handle>` skips the prompt.
 - **Phone generates a key, you paste it.** Termius → **Keychain → New Key → generate (ed25519)** → copy the **public** half → `pocketdev mobile` → *Paste a public key*. The same trust model as SSH ID, one device at a time.
 - **Reuse the laptop's key (simplest on Apple).** AirDrop `~/.ssh/id_ed25519` to the phone and import it in Termius (**Keychain → Import**). Nothing to authorize, since it's already trusted, though laptop and phone then share one key.
 
 ### One-time on the phone
 
-1. Install the **Tailscale app**, sign into the *same* account, and turn on **auto-reconnect** (iOS: VPN On Demand). This keeps the tunnel up in the background so later taps connect without a prompt. (Tailscale has no URL scheme, so this step can't be scripted.)
+1. Install the [**Tailscale app**](https://tailscale.com/download), sign into the *same* account, and turn on **auto-reconnect** (iOS: VPN On Demand). This keeps the tunnel up in the background so later taps connect without a prompt. (Tailscale has no URL scheme, so this step can't be scripted.)
 2. Get a key onto the phone (see *The key is the catch* above; SSH ID is the no-files path).
 3. Install an SSH/Mosh client and add the host:
-   - **Termius (free).** Install from **termius.com**, *not* the Mac App Store (the App Store build can't import keys). New Host with the card's fields (address = the MagicDNS FQDN, or the `100.x` IP as a fallback; user `dev`), attach your key, enable **Mosh** (yes, it's on the free Starter plan), set the startup command `tmux new -As code`. Then it's open → tap → FaceID → coding. *(Host sync across your devices needs Pro; SSH ID public keys sync on free.)*
-   - **Blink Shell (paid, true one-tap).** Once a key is configured, scan the card's `ssh://dev@<fqdn>` QR, or wrap a `blinkshell://run` URL in an iOS Shortcut and "Add to Home Screen" for a literal one-tap-from-home-screen.
+   - **Termius (free).** Install from [termius.com](https://termius.com/), *not* the Mac App Store (the App Store build can't import keys). New Host with the card's fields (address = the MagicDNS FQDN, or the `100.x` IP as a fallback; user `dev`), attach your key, enable [**Mosh**](https://mosh.org/) (yes, it's on the free Starter plan), set the startup command `tmux new -As code`. Then it's open → tap → FaceID → coding. *(Host sync across your devices needs Pro; SSH ID public keys sync on free.)*
+   - **[Blink Shell](https://blink.sh/) (paid, true one-tap).** Once a key is configured, scan the card's `ssh://dev@<fqdn>` QR, or wrap a `blinkshell://run` URL in an iOS Shortcut and "Add to Home Screen" for a literal one-tap-from-home-screen.
 
 > Tried Tailscale SSH (no key at all)? It works, but on this hardened, tailnet-only box it's a step down: the default tailnet policy runs it in "check" mode (a browser re-auth every ~12h, and it breaks Blink), reaching seamless mode needs a one-time ACL edit, it bypasses the box's key-only/no-root SSH hardening, and Mosh support is unreliable through it. SSH ID keeps the hardening, the second factor, and Mosh, for the same "tap and you're in" feel.
 
@@ -128,7 +128,7 @@ pocketdev publish 3000
 
 This installs `cloudflared` on first use (a static binary in `~/.local/bin`, no root) and prints a `https://<random>.trycloudflare.com` URL pointing at `localhost:3000`. Zero account, zero domain, instant. The URL is ephemeral and meant for demos and sharing in progress.
 
-For a persistent URL on your own domain, create a tunnel in the Cloudflare Zero Trust dashboard (public hostname → `http://localhost:3000`), copy its token, and run:
+For a persistent URL on your own domain, create a tunnel in the [Cloudflare Zero Trust dashboard](https://one.dash.cloudflare.com/) (Networks → Tunnels; public hostname → `http://localhost:3000`), copy its token, and run:
 
 ```
 pocketdev publish --token <token>
